@@ -163,7 +163,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                   </form>
                   <SlotIcon kind={s.kind} color={subj?.color} className="size-5" />
                   <div className={`min-w-0 flex-1 ${done ? "muted line-through" : ""}`}>
-                    <p className="truncate font-medium">{s.kind === "subject" ? subjectLabel(subj) : s.label || SLOT_LABELS[s.kind]}</p>
+                    <p className="font-medium leading-snug break-words">{s.kind === "subject" ? subj?.name ?? "Matéria" : s.label || SLOT_LABELS[s.kind]}</p>
                     <p className="muted text-xs no-underline">
                       {s.kind === "subject" && `Bloco ${block}${s.minutes ? ` · ${fmtMinutes(s.minutes)}` : ""}${studied ? ` · ${fmtMinutes(studied)} registrados` : ""}`}
                       {s.kind === "review" && (pendingReviews.length ? `${pendingReviews.length} pendente${pendingReviews.length > 1 ? "s" : ""}` : "Nenhuma pendente")}

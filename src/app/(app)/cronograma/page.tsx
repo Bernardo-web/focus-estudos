@@ -61,14 +61,19 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
                   return (
                     <li key={s.id} className="soft flex items-center gap-2 rounded-xl px-3 py-2">
                       <SlotIcon kind={s.kind} color={subj?.color} />
-                      <span className="min-w-0 flex-1 truncate text-sm">
-                        {s.kind === "subject" ? (
-                          <><span className="font-medium">{subjectLabel(subj)}</span> <span className="muted">· Bloco {list.filter((x, k) => x.kind === "subject" && k <= i).length}</span></>
-                        ) : (
-                          <>{s.label || SLOT_LABELS[s.kind]}{subj && <span className="muted"> · {subjectLabel(subj)}</span>}</>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium leading-snug break-words">
+                          {s.kind === "subject" ? subj?.name ?? "Matéria" : s.label || SLOT_LABELS[s.kind]}
+                        </p>
+                        {(s.kind === "subject" || subj || s.minutes) && (
+                          <p className="muted text-xs">
+                            {[
+                              s.kind === "subject" ? `Bloco ${list.filter((x, k) => x.kind === "subject" && k <= i).length}` : subj?.name,
+                              s.minutes ? fmtMinutes(s.minutes) : null,
+                            ].filter(Boolean).join(" · ")}
+                          </p>
                         )}
-                      </span>
-                      {s.minutes ? <span className="muted text-xs tabular-nums">{fmtMinutes(s.minutes)}</span> : null}
+                      </div>
                       <span className="flex">
                         <form action={moveSlot}><input type="hidden" name="id" value={s.id} /><input type="hidden" name="dir" value="up" />
                           <button disabled={i === 0} className="muted rounded p-1 disabled:opacity-30" aria-label="Subir"><ArrowUp className="size-3.5" /></button></form>
