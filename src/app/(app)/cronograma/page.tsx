@@ -42,7 +42,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
         </p>
       )}
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-2">
         {WEEK_ORDER.map((wd) => {
           const list = slots.filter((s) => s.weekday === wd);
           const mins = list.reduce((a, s) => a + (s.minutes ?? 0), 0);
