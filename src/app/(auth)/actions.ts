@@ -69,7 +69,14 @@ export async function signUp(_: FormState, form: FormData): Promise<FormState> {
       emailRedirectTo: `${await siteUrl()}/auth/confirm`,
     },
   });
-  if (error) return { error: inviteCode ? translate(error.message) : "Cadastro somente por convite." };
+  if (error) {
+    const msg = translate(error.message);
+    // sem código, o banco recusa o cadastro quando já existe algum usuário
+    if (!inviteCode && error.message.toLowerCase().includes("database error")) {
+      return { error: "Cadastro somente por convite. (Se você é o primeiro usuário, confira se o app está ligado ao projeto certo do Supabase.)" };
+    }
+    return { error: msg };
+  }
 
   // Com a confirmação de e-mail desligada no Supabase, a pessoa já entra direto
   if (data.session) redirect("/hoje");
