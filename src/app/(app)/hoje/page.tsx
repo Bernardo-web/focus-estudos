@@ -178,6 +178,9 @@ export default async function TodayPage({ searchParams }: { searchParams: Promis
                       <ClipboardList className="size-3.5" /> {mockToday ? "Abrir" : "Registrar"}
                     </Link>
                   )}
+                  {s.kind === "questions" && !done && (
+                    <Link href="/importar" className="btn-ghost px-3 py-2 text-sm">Importar</Link>
+                  )}
                   {(s.kind === "log" || s.kind === "week_review") && !done && (
                     <Link href="/progresso" className="btn-ghost px-3 py-2 text-sm">Ver</Link>
                   )}

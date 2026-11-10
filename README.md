@@ -22,6 +22,9 @@ Next.js 15 + TypeScript + Tailwind, Supabase (PostgreSQL com Row Level Security)
   com gráfico de evolução.
 - **Progresso**: horas por semana contra a meta, dia a dia, dias seguidos de estudo, desempenho por matéria
   e resumo da semana (o "registrar o desempenho" do domingo).
+- **Importar questões do Qconcursos**: botão de favoritos (computador) ou copiar e colar (celular) a tabela
+  "Estatísticas de Disciplinas". Prévia com a matéria do Focus de cada disciplina (o app lembra as escolhas),
+  e o mesmo período não é contado duas vezes.
 - **Convites** (administrador), **configurações** (perfil, tema claro/escuro, excluir conta) e **privacidade**.
 
 ## Segurança
@@ -36,7 +39,8 @@ Next.js 15 + TypeScript + Tailwind, Supabase (PostgreSQL com Row Level Security)
 
 1. Em [supabase.com](https://supabase.com), crie um projeto novo (região **South America (São Paulo)**).
    Dá para usar a mesma conta do Flowly, mas crie um **projeto separado**.
-2. Em **SQL Editor > New query**, cole e rode `supabase/migrations/0001_schema.sql` (uma vez só).
+2. Em **SQL Editor > New query**, rode **em ordem**, uma vez cada: `supabase/migrations/0001_schema.sql` e
+   `supabase/migrations/0002_qconcursos_import.sql`.
    Ele cria as tabelas, as regras de segurança e o bucket privado `crests` dos brasões.
 3. Em **Authentication > URL Configuration**: *Site URL* com o endereço do app e, em *Redirect URLs*,
    `http://localhost:3000/**` e o endereço da Vercel com `/**`.
