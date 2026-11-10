@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+/* Tema: segue o sistema, a menos que o usuário escolha claro ou escuro (atributo data-theme no <html>) */
+@custom-variant dark {
+  &:where([data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(html:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand-50: #eff4ff;
+  --color-brand-100: #dbe6fe;
+  --color-brand-500: #4f7cf7;
+  --color-brand-600: #2b59e0;
+  --color-brand-700: #1e3fae;
+  --color-brand-800: #1a2f80;
+
+  --color-gold-400: #f2c14e;
+  --color-gold-500: #e0a82e;
+  --color-gold-600: #b7831a;
+
+  --color-good: #16a34a;
+  --color-bad: #dc2626;
+}
+
+:root {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --border: #e2e7f0;
+  --text: #121a2b;
+  --muted: #5c6880;
+  --soft: #eef2f8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a0f1c;
+    --surface: #111827;
+    --border: #1f2a3f;
+    --text: #e7ecf5;
+    --muted: #8b97ad;
+    --soft: #172036;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0a0f1c;
+  --surface: #111827;
+  --border: #1f2a3f;
+  --text: #e7ecf5;
+  --muted: #8b97ad;
+  --soft: #172036;
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer components {
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+  }
+  .muted {
+    color: var(--muted);
+  }
+  .input {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 0.7rem 0.9rem;
+    font-size: 1rem; /* 16px evita zoom automático no iPhone */
+    outline: none;
+  }
+  .input:focus {
+    border-color: var(--color-brand-600);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-500) 25%, transparent);
+  }
+  .label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.35rem;
+  }
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.75rem;
+    background: var(--color-brand-700);
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover {
+    background: var(--color-brand-800);
+  }
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: 0.75rem;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-weight: 500;
+  }
+}
+
+@layer components {
+  .soft {
+    background: var(--soft);
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--soft);
+  }
+  .bar {
+    height: 0.5rem;
+    border-radius: 999px;
+    background: var(--soft);
+    overflow: hidden;
+  }
+  .bar > span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--color-brand-600);
+  }
+  .select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23708099' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+    padding-right: 2.2rem;
+  }
+}
