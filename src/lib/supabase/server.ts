@@ -3,6 +3,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { fetchWithTimeout, withTimeout } from "./timeout";
+import { SUPABASE_KEY, SUPABASE_URL } from "./env";
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
@@ -10,8 +11,8 @@ type CookieToSet = { name: string; value: string; options?: CookieOptions };
 export async function createClient() {
   const cookieStore = await cookies();
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)!,
+    SUPABASE_URL,
+    SUPABASE_KEY,
     {
       global: { fetch: fetchWithTimeout(8000) },
       cookies: {
