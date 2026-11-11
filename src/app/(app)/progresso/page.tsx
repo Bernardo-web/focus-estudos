@@ -7,7 +7,8 @@ import { score } from "@/lib/scoring";
 import type { Mock, Session, Topic } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
 import { NoExam } from "@/components/no-exam";
-import { ColumnChart, HBar, LineChart } from "@/components/charts";
+import { ColumnChart, HBar, Heatmap, LineChart } from "@/components/charts";
+import { TargetCard } from "@/components/target-card";
 
 export const metadata: Metadata = { title: "Progresso" };
 
@@ -20,11 +21,16 @@ export default async function ProgressPage() {
   const from = addDays(monday, -7 * 7);
   const subjects = await getSubjects(supabase, exam.id);
 
-  const [{ data: sData }, { data: tData }, { data: mData }] = await Promise.all([
+  const heatStart = addDays(monday, -7 * 17);
+  const [{ data: sData }, { data: tData }, { data: mData }, { data: hData }] = await Promise.all([
     supabase.from("study_sessions").select("id, exam_id, subject_id, topic_id, day, minutes, questions, correct, wrong, notes").eq("exam_id", exam.id).gte("day", from).lte("day", day),
     supabase.from("topics").select("id, subject_id, name, status, position").in("subject_id", subjects.map((s) => s.id)),
     supabase.from("mocks").select("id, exam_id, title, scheduled_on, done, total_items, correct, wrong, essay_score, essay_max, notes").eq("exam_id", exam.id).eq("done", true).order("scheduled_on"),
+    supabase.from("study_sessions").select("day, minutes, questions").eq("exam_id", exam.id).gte("day", heatStart).lte("day", day),
   ]);
+  const heat: Record<string, number> = {};
+  for (const s of hData ?? []) heat[s.day] = (heat[s.day] ?? 0) + s.minutes + (s.minutes ? 0 : s.questions ? 1 : 0);
+  const daysStudied = Object.values(heat).filter((m) => m > 0).length;
   const sessions = (sData ?? []) as Session[];
   const topics = (tData ?? []) as Topic[];
   const mocks = (mData ?? []) as Mock[];
@@ -74,6 +80,10 @@ export default async function ProgressPage() {
   const lastMock = mocks.at(-1);
   const lastMockScore = lastMock?.total_items ? score(lastMock.total_items, lastMock.correct ?? 0, lastMock.wrong ?? 0, exam.scoring) : null;
 
+  const lastMockWithItems = [...mocks].reverse().find((m) => m.total_items) ?? null;
+  const { data: lastResults } = lastMockWithItems
+    ? await supabase.from("mock_results").select("subject_id, items, correct, wrong").eq("mock_id", lastMockWithItems.id)
+    : { data: [] };
   const mockSeries = mocks.filter((m) => m.total_items).map((m) => ({ label: m.scheduled_on.slice(8, 10) + "/" + m.scheduled_on.slice(5, 7), value: score(m.total_items!, m.correct ?? 0, m.wrong ?? 0, exam.scoring).netPct ?? 0 }));
 
   return (
@@ -89,6 +99,16 @@ export default async function ProgressPage() {
           <p className="muted text-xs">{streak === 1 ? "dia seguido" : "dias seguidos"}</p>
         </div>
       </section>
+
+      <section className="card space-y-3 p-5">
+        <div className="flex items-baseline justify-between">
+          <h2 className="font-semibold">Constância</h2>
+          <span className="muted text-xs">{daysStudied} dias estudados em 18 semanas</span>
+        </div>
+        <Heatmap start={heatStart} days={heat} today={day} />
+      </section>
+
+      <TargetCard exam={exam} mock={lastMockWithItems} results={lastResults ?? []} subjects={subjects} />
 
       <section className="card space-y-3 p-5">
         <h2 className="font-semibold">Resumo da semana</h2>

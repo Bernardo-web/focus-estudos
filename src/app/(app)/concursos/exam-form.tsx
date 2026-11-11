@@ -162,6 +162,17 @@ export function ExamForm({ exam, crestUrl }: { exam?: Exam; crestUrl?: string | 
               <input className="input" id="goal_accuracy" name="goal_accuracy" type="number" min={0} max={100} defaultValue={exam.goal_accuracy} />
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label" htmlFor="total_items">Itens na prova objetiva</label>
+              <input className="input" id="total_items" name="total_items" type="number" min={1} max={1000} defaultValue={exam.total_items ?? ""} placeholder="Ex.: 120" />
+            </div>
+            <div>
+              <label className="label" htmlFor="target_score">Nota de corte esperada</label>
+              <input className="input" id="target_score" name="target_score" inputMode="decimal" defaultValue={exam.target_score ?? ""} placeholder={exam.scoring === "cebraspe" ? "Pontos líquidos, ex.: 70" : "Acertos, ex.: 60"} />
+            </div>
+          </div>
+          <p className="muted -mt-2 text-xs">Com a nota de corte, o Focus mostra em cada simulado quanto falta e onde estão os pontos mais fáceis de ganhar.</p>
           <div>
             <label className="label" htmlFor="notes">Anotações</label>
             <textarea className="input min-h-24" id="notes" name="notes" maxLength={2000} defaultValue={exam.notes ?? ""} placeholder="Links do edital, requisitos, TAF..." />

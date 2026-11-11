@@ -17,6 +17,8 @@ export type Exam = {
   goal_weekly_questions: number;
   goal_accuracy: number;
   notes: string | null;
+  target_score: number | null;
+  total_items: number | null;
 };
 
 export type Subject = {
@@ -81,7 +83,7 @@ export type Mock = {
 };
 
 export const EXAM_COLS =
-  "id, org_key, name, role, board, exam_date, scoring, color, crest_path, status, is_primary, goal_weekly_minutes, goal_weekly_questions, goal_accuracy, notes";
+  "id, org_key, name, role, board, exam_date, scoring, color, crest_path, status, is_primary, goal_weekly_minutes, goal_weekly_questions, goal_accuracy, notes, target_score, total_items";
 
 export const TOPIC_STATUS: Record<TopicStatus, { label: string; cls: string }> = {
   pending: { label: "Não visto", cls: "bg-[var(--soft)] muted" },

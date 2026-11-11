@@ -33,6 +33,7 @@ export type ExamTemplate = {
   scoring: "cebraspe" | "tradicional";
   color: string;
   goals: { minutes: number; questions: number; accuracy: number };
+  totalItems?: number;
   subjects: TemplateSubject[];
   slots: TemplateSlot[];
 };
@@ -55,6 +56,7 @@ export const PMAL_SOLDADO: ExamTemplate = {
   scoring: "cebraspe",
   color: "#1e3a8a",
   goals: { minutes: 1080, questions: 150, accuracy: 75 },
+  totalItems: 120,
   subjects: [
     { key: "port", name: "Língua Portuguesa", short: "Português", color: "#2563eb" },
     { key: "mat", name: "Matemática", color: "#7c3aed" },

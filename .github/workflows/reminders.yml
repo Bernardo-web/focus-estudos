@@ -1,0 +1,22 @@
+# Lembretes diários do Focus: chama /api/push/cron de hora em hora.
+# Usa os mesmos CRON_SECRET (secret) e SITE_URL (variável) do keepalive.
+name: Lembretes de estudo
+
+on:
+  schedule:
+    - cron: "3 * * * *"
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enviar lembretes
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ vars.SITE_URL || secrets.SITE_URL }}
+        run: |
+          if [ -z "$SITE_URL" ]; then echo "Variável SITE_URL não configurada"; exit 1; fi
+          code=$(curl -s -o resp.json -w "%{http_code}" -m 60 -H "Authorization: Bearer $CRON_SECRET" "$SITE_URL/api/push/cron")
+          cat resp.json; echo
+          [ "$code" = "200" ]

@@ -1,13 +1,13 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
-import { Pause, Play, RotateCcw } from "lucide-react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { Coffee, Pause, Play, RotateCcw, Timer as TimerIcon } from "lucide-react";
 import { FormMessage, SubmitButton } from "@/components/form-bits";
 import { score, type Scoring } from "@/lib/scoring";
 import type { Topic } from "@/lib/types";
 import { logSession } from "./actions";
 
-type Timer = { running: boolean; startedAt: number | null; elapsed: number };
+type Timer = { running: boolean; startedAt: number | null; elapsed: number; mode?: "free" | "pomodoro"; focus?: number; rest?: number };
 export const TIMER_KEY = "focus-timer";
 const KEY = TIMER_KEY;
 
@@ -35,6 +35,57 @@ const clock = (ms: number) => {
   return `${h ? `${h}:` : ""}${String(m).padStart(h ? 2 : 1, "0")}:${String(s % 60).padStart(2, "0")}`;
 };
 
+/** Pomodoro: ciclos de foco + pausa sobre o tempo total; só o foco conta como estudo. */
+function pomodoro(ms: number, focusMin: number, restMin: number) {
+  const f = focusMin * 60000;
+  const cycle = f + restMin * 60000;
+  const pos = ms % cycle;
+  const done = Math.floor(ms / cycle);
+  const inFocus = pos < f;
+  return {
+    inFocus,
+    cycle: done + 1,
+    focusMs: done * f + Math.min(pos, f),
+    leftMs: inFocus ? f - pos : cycle - pos,
+  };
+}
+
+function beep(times = 2) {
+  try {
+    const ctx = new AudioContext();
+    for (let i = 0; i < times; i++) {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.frequency.value = 880;
+      o.connect(g);
+      g.connect(ctx.destination);
+      const t = ctx.currentTime + i * 0.35;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+      o.start(t);
+      o.stop(t + 0.3);
+    }
+  } catch {
+    /* sem áudio */
+  }
+}
+
+function notify(title: string, body: string) {
+  try {
+    if ("Notification" in window && Notification.permission === "granted") {
+      navigator.serviceWorker?.getRegistration().then((reg) => {
+        if (reg) reg.showNotification(title, { body, icon: "/icon-192.png", tag: "focus-pomodoro" });
+        else new Notification(title, { body });
+      });
+    }
+  } catch {
+    /* ignora */
+  }
+}
+
+const PRESETS: [number, number][] = [[25, 5], [50, 10], [90, 15]];
+
 export function StudyForm(props: {
   examId: string;
   scoring: Scoring;
@@ -60,17 +111,42 @@ export function StudyForm(props: {
   }, [timer.running]);
 
   const elapsed = total(timer, now);
+  const mode = timer.mode ?? "free";
+  const focusMin = timer.focus ?? 50;
+  const restMin = timer.rest ?? 10;
+  const pomo = pomodoro(elapsed, focusMin, restMin);
+  const studiedMs = mode === "pomodoro" ? pomo.focusMs : elapsed;
+
+  // avisa na troca de foco ↔ pausa
+  const lastPhase = useRef<string | null>(null);
+  useEffect(() => {
+    if (mode !== "pomodoro" || !timer.running) {
+      lastPhase.current = null;
+      return;
+    }
+    const phase = `${pomo.cycle}-${pomo.inFocus}`;
+    if (lastPhase.current && lastPhase.current !== phase) {
+      beep(pomo.inFocus ? 3 : 2);
+      notify(pomo.inFocus ? "Hora de voltar ao foco" : "Pausa!", pomo.inFocus ? `Ciclo ${pomo.cycle}: ${focusMin} min de foco.` : `${restMin} min para descansar.`);
+    }
+    lastPhase.current = phase;
+  }, [mode, timer.running, pomo.cycle, pomo.inFocus, focusMin, restMin]);
   const update = (t: Timer) => {
     setTimer(t);
     saveTimer(t);
   };
-  const start = () => update({ running: true, startedAt: Date.now(), elapsed: timer.elapsed });
-  const pause = () => {
-    const t = { running: false, startedAt: null, elapsed: total(timer, Date.now()) };
-    update(t);
-    setMinutes(String(Math.max(1, Math.round(t.elapsed / 60000))));
+  const start = () => {
+    if (mode === "pomodoro" && "Notification" in window && Notification.permission === "default") Notification.requestPermission().catch(() => {});
+    update({ ...timer, running: true, startedAt: Date.now(), elapsed: timer.elapsed });
   };
-  const reset = () => update({ running: false, startedAt: null, elapsed: 0 });
+  const pause = () => {
+    const t: Timer = { ...timer, running: false, startedAt: null, elapsed: total(timer, Date.now()) };
+    update(t);
+    const ms = (t.mode ?? "free") === "pomodoro" ? pomodoro(t.elapsed, t.focus ?? 50, t.rest ?? 10).focusMs : t.elapsed;
+    setMinutes(String(Math.max(1, Math.round(ms / 60000))));
+  };
+  const reset = () => update({ ...timer, running: false, startedAt: null, elapsed: 0 });
+  const setMode = (m: "free" | "pomodoro", f = focusMin, r = restMin) => update({ ...timer, mode: m, focus: f, rest: r });
 
   const topics = useMemo(() => props.topics.filter((t) => t.subject_id === subject), [props.topics, subject]);
   const nq = Number(q.questions) || 0;
@@ -81,7 +157,51 @@ export function StudyForm(props: {
   return (
     <div className="space-y-5">
       <section className="card flex flex-col items-center gap-4 p-6">
-        <p className="font-mono text-5xl font-bold tabular-nums" aria-live="off">{clock(elapsed)}</p>
+        <div className="soft flex rounded-xl p-1 text-sm" role="tablist" aria-label="Modo do cronômetro">
+          {(["free", "pomodoro"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              role="tab"
+              aria-selected={mode === m}
+              disabled={timer.running}
+              onClick={() => setMode(m)}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-medium ${mode === m ? "bg-[var(--surface)] shadow-sm" : "muted"}`}
+            >
+              {m === "free" ? <TimerIcon className="size-4" /> : <Coffee className="size-4" />}
+              {m === "free" ? "Livre" : "Pomodoro"}
+            </button>
+          ))}
+        </div>
+
+        {mode === "pomodoro" && (
+          <div className="flex flex-wrap justify-center gap-2">
+            {PRESETS.map(([f, r]) => (
+              <button
+                key={f}
+                type="button"
+                disabled={timer.running}
+                onClick={() => setMode("pomodoro", f, r)}
+                className={`chip ${focusMin === f && restMin === r ? "bg-brand-700 text-white" : ""}`}
+              >
+                {f}/{r} min
+              </button>
+            ))}
+          </div>
+        )}
+
+        {mode === "pomodoro" ? (
+          <>
+            <p className={`text-sm font-semibold ${pomo.inFocus ? "text-brand-700 dark:text-brand-500" : "text-good"}`}>
+              {pomo.inFocus ? `Foco · ciclo ${pomo.cycle}` : "Pausa"}
+            </p>
+            <p className="font-mono text-5xl font-bold tabular-nums">{clock(pomo.leftMs)}</p>
+            <p className="muted text-sm">Estudado: <strong>{clock(studiedMs)}</strong></p>
+          </>
+        ) : (
+          <p className="font-mono text-5xl font-bold tabular-nums" aria-live="off">{clock(elapsed)}</p>
+        )}
+
         <div className="flex gap-2">
           {timer.running ? (
             <button type="button" onClick={pause} className="btn-primary"><Pause className="size-4" /> Pausar</button>
@@ -90,7 +210,11 @@ export function StudyForm(props: {
           )}
           <button type="button" onClick={reset} className="btn-ghost" disabled={!elapsed}><RotateCcw className="size-4" /> Zerar</button>
         </div>
-        <p className="muted text-center text-xs">O cronômetro continua contando mesmo se você sair desta tela. Ao pausar, o tempo vai para o registro.</p>
+        <p className="muted text-center text-xs">
+          {mode === "pomodoro"
+            ? "Toca um aviso na troca entre foco e pausa. Só o tempo de foco vai para o registro."
+            : "O cronômetro continua contando mesmo se você sair desta tela. Ao pausar, o tempo vai para o registro."}
+        </p>
       </section>
 
       <form action={action} className="card space-y-4 p-5">
@@ -146,6 +270,11 @@ export function StudyForm(props: {
               {props.scoring === "cebraspe" && <> · Líquido: <strong>{s.net}</strong> ({nq - nc - nw} em branco)</>}
               {nc + nw > nq && <span className="text-bad"> · certas + erradas passou do total</span>}
             </p>
+          )}
+          {nw > 0 && (
+            <a href={`/erros${subject ? `?materia=${subject}` : ""}`} target="_blank" rel="noopener" className="block text-sm font-medium text-brand-700 dark:text-brand-500">
+              Errou {nw}? Anote no caderno de erros →
+            </a>
           )}
         </fieldset>
 

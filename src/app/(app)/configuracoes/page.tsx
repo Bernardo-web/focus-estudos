@@ -6,6 +6,8 @@ import { getProfile, getUser } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/page-header";
 import { setTheme } from "./actions";
 import { DeleteAccountForm, ProfileForm } from "./forms";
+import { Reminders } from "./reminders";
+import { vapidPublicKey } from "@/lib/push";
 
 export const metadata: Metadata = { title: "Configurações" };
 
@@ -13,6 +15,8 @@ export default async function SettingsPage() {
   const { user } = await getUser();
   const profile = await getProfile();
   const theme = (await cookies()).get("theme")?.value ?? "system";
+  const { supabase } = await getUser();
+  const { data: reminder } = await supabase.from("reminder_settings").select("hour, enabled").maybeSingle();
 
   const themes = [
     { value: "system", label: "Sistema", icon: Monitor },
@@ -27,6 +31,11 @@ export default async function SettingsPage() {
       <section className="card space-y-3 p-5">
         <h2 className="font-semibold">Perfil</h2>
         <ProfileForm name={profile?.full_name ?? ""} />
+      </section>
+
+      <section className="card space-y-3 p-5">
+        <h2 className="font-semibold">Lembretes no celular</h2>
+        <Reminders publicKey={vapidPublicKey()} hour={reminder?.hour ?? 19} enabled={reminder?.enabled ?? true} />
       </section>
 
       <section className="card space-y-3 p-5">
@@ -53,7 +62,7 @@ export default async function SettingsPage() {
       </p>
 
       <section className="card space-y-3 border-red-300 p-5 dark:border-red-900">
-        <h2 className="font-semibold text-expense">Excluir conta</h2>
+        <h2 className="font-semibold text-bad">Excluir conta</h2>
         <DeleteAccountForm />
       </section>
     </div>

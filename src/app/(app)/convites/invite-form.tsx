@@ -46,7 +46,7 @@ export function ShareInvite({ url }: { url: string }) {
 
   return (
     <button type="button" onClick={share} className="btn-ghost text-sm" aria-label="Compartilhar link do convite">
-      {copied ? <Check className="size-4 text-income" /> : <Share2 className="size-4" />}
+      {copied ? <Check className="size-4 text-good" /> : <Share2 className="size-4" />}
       {copied ? "Copiado" : "Enviar"}
     </button>
   );

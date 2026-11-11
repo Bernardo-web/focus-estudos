@@ -8,6 +8,9 @@ import {
   CalendarDays,
   ClipboardList,
   Download,
+  Dumbbell,
+  NotebookPen,
+  PenLine,
   History,
   Landmark,
   LogOut,
@@ -27,6 +30,9 @@ export function navItems(isAdmin: boolean): Item[] {
     { href: "/cronograma", label: "Cronograma", icon: CalendarDays },
     { href: "/estudos", label: "Estudos e revisões", icon: History },
     { href: "/simulados", label: "Simulados", icon: ClipboardList },
+    { href: "/erros", label: "Caderno de erros", icon: NotebookPen },
+    { href: "/redacao", label: "Redação", icon: PenLine },
+    { href: "/taf", label: "TAF", icon: Dumbbell },
     { href: "/importar", label: "Importar questões", icon: Download },
     { href: "/progresso", label: "Progresso", icon: BarChart3 },
     { href: "/edital", label: "Edital", icon: BookOpenCheck },
@@ -40,7 +46,7 @@ export function AppNav({ isAdmin, name }: { isAdmin: boolean; name: string }) {
   const path = usePathname();
   const items = navItems(isAdmin);
   const active = (href: string) => path === href || path.startsWith(`${href}/`);
-  const inMore = ["/estudos", "/importar", "/progresso", "/edital", "/concursos", "/convites", "/configuracoes", "/mais"].some(active);
+  const inMore = ["/estudos", "/erros", "/redacao", "/taf", "/importar", "/progresso", "/edital", "/concursos", "/convites", "/configuracoes", "/mais"].some(active);
 
   const tab = (href: string, label: string, Icon: Item["icon"], on: boolean) => (
     <Link

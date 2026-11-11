@@ -6,7 +6,7 @@ import { SUPABASE_KEY, SUPABASE_URL } from "./env";
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
-const PUBLIC_PATHS = ["/entrar", "/cadastro", "/recuperar", "/auth/", "/api/keepalive", "/privacidade"];
+const PUBLIC_PATHS = ["/entrar", "/cadastro", "/recuperar", "/auth/", "/api/keepalive", "/api/push/cron", "/privacidade"];
 
 /** Renova a sessão a cada requisição e protege as páginas internas. */
 export async function updateSession(request: NextRequest) {

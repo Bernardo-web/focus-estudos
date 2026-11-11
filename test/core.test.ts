@@ -21,3 +21,25 @@ test("nota Cebraspe: errada anula certa", () => {
   assert.equal(score(10, 7, 3, "tradicional").net, 7);
   assert.equal(score(0, 0, 0, "cebraspe").accuracy, null);
 });
+
+import { toAnki } from "../src/lib/anki.ts";
+test("exporta para o Anki com tabulação e HTML seguro", () => {
+  const out = toAnki([{ statement: "A <lei>\tdiz:\nX", answer: "Errado", bizu: null, tags: ["Focus", "Direito Constitucional", "pegadinha"] }]);
+  const lines = out.trim().split("\n");
+  assert.equal(lines[0], "#separator:tab");
+  assert.equal(lines[4], "A &lt;lei&gt; diz:<br>X\tErrado\t\tFocus Direito_Constitucional pegadinha");
+});
+
+import { fmtMark, parseMark, passes } from "../src/lib/fitness.ts";
+test("marcas do TAF", () => {
+  assert.equal(parseMark("11:30", "seconds"), 690);
+  assert.equal(parseMark("10min45", "seconds"), 645);
+  assert.equal(parseMark("10,8", "seconds"), 10.8);
+  assert.equal(parseMark("42", "reps"), 42);
+  assert.equal(parseMark("", "reps"), null);
+  assert.equal(fmtMark(690, "seconds"), "11min30s");
+  assert.equal(fmtMark(660, "seconds"), "11min");
+  assert.equal(fmtMark(10.8, "seconds"), "10,8 s");
+  assert.ok(passes(645, 660, false));
+  assert.ok(!passes(3, 4, true));
+});

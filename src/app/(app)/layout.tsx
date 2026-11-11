@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getProfile, getUser } from "@/lib/supabase/server";
 import { AppNav } from "@/components/app-nav";
+import { SwRegister } from "@/components/sw-register";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { user } = await getUser();
@@ -9,6 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-dvh">
+      <SwRegister />
       <AppNav isAdmin={profile?.is_admin ?? false} name={profile?.full_name || user.email || ""} />
       <main className="mx-auto max-w-6xl px-4 pb-28 pt-6 md:pb-10 md:pl-72 md:pr-8 md:pt-10">{children}</main>
     </div>

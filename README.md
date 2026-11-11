@@ -25,6 +25,13 @@ Next.js 15 + TypeScript + Tailwind, Supabase (PostgreSQL com Row Level Security)
 - **Importar questões do Qconcursos**: botão de favoritos (computador) ou copiar e colar (celular) a tabela
   "Estatísticas de Disciplinas". Prévia com a matéria do Focus de cada disciplina (o app lembra as escolhas),
   e o mesmo período não é contado duas vezes.
+- **Caderno de erros**: assertiva, gabarito, motivo do erro e bizu; exporta para o Anki (Frente, Verso, Bizu, Tags).
+- **Pomodoro** no cronômetro (25/5, 50/10, 90/15), com aviso sonoro; só o foco conta como estudo.
+- **TAF**: índices do edital (modelo PMAL 2026 masculino/feminino), marcas dos treinos, apto/abaixo e evolução.
+- **Redação**: banco de temas, nota, onde perdeu pontos e evolução.
+- **Meta de nota**: nota de corte esperada, distância a cada simulado e onde estão os pontos mais fáceis.
+- **Calendário de constância** no Progresso.
+- **Lembretes no celular** (notificação diária no horário escolhido).
 - **Convites** (administrador), **configurações** (perfil, tema claro/escuro, excluir conta) e **privacidade**.
 
 ## Segurança
@@ -39,8 +46,8 @@ Next.js 15 + TypeScript + Tailwind, Supabase (PostgreSQL com Row Level Security)
 
 1. Em [supabase.com](https://supabase.com), crie um projeto novo (região **South America (São Paulo)**).
    Dá para usar a mesma conta do Flowly, mas crie um **projeto separado**.
-2. Em **SQL Editor > New query**, rode **em ordem**, uma vez cada: `supabase/migrations/0001_schema.sql` e
-   `supabase/migrations/0002_qconcursos_import.sql`.
+2. Em **SQL Editor > New query**, rode **em ordem**, uma vez cada: `0001_schema.sql`, `0002_qconcursos_import.sql`
+   e `0003_erros_taf_redacao_lembretes.sql` (pasta `supabase/migrations`).
    Ele cria as tabelas, as regras de segurança e o bucket privado `crests` dos brasões.
 3. Em **Authentication > URL Configuration**: *Site URL* com o endereço do app e, em *Redirect URLs*,
    `http://localhost:3000/**` e o endereço da Vercel com `/**`.
@@ -71,6 +78,15 @@ Depois, em **Concursos > Novo**, escolha o modelo **PMAL 2026 — Soldado** e en
 4. Deploy. Depois, atualize a *Site URL* e as *Redirect URLs* do Supabase.
 5. Para o banco gratuito não pausar: no GitHub, em *Settings > Secrets and variables > Actions*, crie o
    secret `CRON_SECRET` (mesmo valor da Vercel) e a variável `SITE_URL` com o endereço do app.
+
+### Lembretes no celular
+
+1. Gere as chaves (uma vez): `npx web-push generate-vapid-keys`.
+2. Na Vercel, cadastre `VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY` (a privada como *Secret*) e faça Redeploy.
+   A rotina usa também `SUPABASE_SERVICE_ROLE_KEY`, que a integração Vercel + Supabase já cria.
+3. O GitHub Actions (`.github/workflows/reminders.yml`) chama `/api/push/cron` de hora em hora, com os mesmos
+   `CRON_SECRET` e `SITE_URL` do keepalive.
+4. No app: **Configurações → Lembretes no celular → Ativar notificações neste aparelho**.
 
 ### Instalar no celular / tablet
 

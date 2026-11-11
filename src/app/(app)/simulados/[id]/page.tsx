@@ -6,6 +6,7 @@ import { score } from "@/lib/scoring";
 import type { Mock } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
 import { MockForm } from "../mock-form";
+import { TargetCard } from "@/components/target-card";
 import { deleteMock } from "../actions";
 
 export const metadata: Metadata = { title: "Simulado" };
@@ -38,6 +39,8 @@ export default async function MockPage({ params, searchParams }: { params: Promi
           <div><p className="text-2xl font-bold">{sc.accuracy ?? "—"}%</p><p className="muted text-xs">acerto</p></div>
         </section>
       )}
+
+      {mock.done && mock.total_items ? <TargetCard exam={exam} mock={mock} results={results ?? []} subjects={subjects} /> : null}
 
       {(results ?? []).length > 0 && (
         <section className="card space-y-2 p-5">

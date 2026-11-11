@@ -69,6 +69,7 @@ export async function createExam(_: ExamState, form: FormData): Promise<ExamStat
       ...row,
       is_primary: (count ?? 0) === 0,
       ...(goals && { goal_weekly_minutes: goals.minutes, goal_weekly_questions: goals.questions, goal_accuracy: goals.accuracy }),
+      ...(template?.totalItems && { total_items: template.totalItems }),
     })
     .select("id")
     .single();
@@ -125,6 +126,11 @@ export async function updateExam(_: ExamState, form: FormData): Promise<ExamStat
     goal_weekly_questions: int(form, "goal_questions", 0, 10000, 150),
     goal_accuracy: int(form, "goal_accuracy", 0, 100, 75),
     notes: str(form, "notes", 2000),
+    total_items: str(form, "total_items", 5) ? int(form, "total_items", 1, 1000, 120) : null,
+    target_score: (() => {
+      const v = Number(String(form.get("target_score") ?? "").trim().replace(",", "."));
+      return String(form.get("target_score") ?? "").trim() && Number.isFinite(v) ? Math.min(Math.max(v, 0), 9999) : null;
+    })(),
   };
 
   const { data: current } = await supabase.from("exams").select("crest_path").eq("id", id).single();

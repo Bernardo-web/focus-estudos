@@ -88,3 +88,44 @@ export function HBar({ label, value, max, color, right }: { label: string; value
     </div>
   );
 }
+
+/** Calendário de constância: um quadrado por dia (semanas em colunas, segunda a domingo). */
+export function Heatmap({ start, days, today, levels = [1, 60, 120, 180] }: { start: string; days: Record<string, number>; today: string; levels?: number[] }) {
+  const weeks = 18;
+  const cell = 14;
+  const gap = 3;
+  const parse = (iso: string) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10));
+  const iso = (t: number) => new Date(t).toISOString().slice(0, 10);
+  const t0 = parse(start);
+  const shades = ["var(--soft)", "color-mix(in srgb, var(--color-brand-500) 30%, transparent)", "color-mix(in srgb, var(--color-brand-500) 55%, transparent)", "color-mix(in srgb, var(--color-brand-600) 80%, transparent)", "var(--color-brand-700)"];
+  const level = (m: number) => (m <= 0 ? 0 : levels.filter((l) => m >= l).length);
+  const months: { x: number; label: string }[] = [];
+  const cells = [];
+  for (let w = 0; w < weeks; w++) {
+    for (let d = 0; d < 7; d++) {
+      const date = iso(t0 + (w * 7 + d) * 86_400_000);
+      if (date > today) continue;
+      if (d === 0 && (w === 0 || date.slice(8, 10) <= "07")) {
+        months.push({ x: w * (cell + gap), label: new Intl.DateTimeFormat("pt-BR", { month: "short", timeZone: "UTC" }).format(parse(date)).replace(".", "") });
+      }
+      const m = days[date] ?? 0;
+      cells.push(
+        <rect key={date} x={w * (cell + gap)} y={14 + d * (cell + gap)} width={cell} height={cell} rx="3" fill={shades[level(m)]} stroke={date === today ? "var(--color-gold-500)" : "none"} strokeWidth="1.5">
+          <title>{`${date.split("-").reverse().join("/")}: ${m ? `${Math.floor(m / 60)}h${String(m % 60).padStart(2, "0")}` : "sem estudo"}`}</title>
+        </rect>,
+      );
+    }
+  }
+  const W = weeks * (cell + gap);
+  return (
+    <div className="space-y-2">
+      <svg viewBox={`0 0 ${W} ${14 + 7 * (cell + gap)}`} className="w-full" role="img" aria-label="Calendário de dias estudados">
+        {months.map((m) => <text key={m.x} x={m.x} y="10" fontSize="9" fill="var(--muted)">{m.label}</text>)}
+        {cells}
+      </svg>
+      <div className="muted flex items-center justify-end gap-1 text-[10px]">
+        menos {shades.map((c, i) => <span key={i} className="inline-block size-2.5 rounded-sm" style={{ background: c }} />)} mais
+      </div>
+    </div>
+  );
+}

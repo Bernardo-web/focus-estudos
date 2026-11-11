@@ -17,6 +17,7 @@ export default function PrivacyPage() {
           <li>Seu nome e e-mail, para o login.</li>
           <li>O que você cadastra: concursos, matérias, cronograma, sessões de estudo, revisões, simulados e metas.</li>
           <li>As imagens de brasão que você envia. Elas ficam numa pasta privada da sua conta; ninguém mais as vê.</li>
+          <li>Se você ativar os lembretes, o endereço de notificação do seu navegador (não identifica você fora do Focus).</li>
         </ul>
       </section>
       <section className="space-y-2">

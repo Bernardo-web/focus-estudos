@@ -9,6 +9,8 @@ import type { Mock } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
 import { NoExam } from "@/components/no-exam";
 import { LineChart } from "@/components/charts";
+import { TargetCard } from "@/components/target-card";
+import { getSubjects } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Simulados" };
 
@@ -23,6 +25,11 @@ export default async function MocksPage() {
     .order("scheduled_on", { ascending: false })
     .limit(200);
   const mocks = (data ?? []) as Mock[];
+  const lastDone = mocks.find((m) => m.done && m.total_items) ?? null;
+  const [subjects, { data: lastResults }] = await Promise.all([
+    getSubjects(supabase, exam.id),
+    lastDone ? supabase.from("mock_results").select("subject_id, items, correct, wrong").eq("mock_id", lastDone.id) : Promise.resolve({ data: [] }),
+  ]);
   const day = today();
   const upcoming = mocks.filter((m) => !m.done).reverse();
   const done = mocks.filter((m) => m.done);
@@ -53,6 +60,8 @@ export default async function MocksPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Simulados" subtitle={exam.name} action={<Link href="/simulados/novo" className="btn-primary"><Plus className="size-4" /> Novo</Link>} />
+
+      <TargetCard exam={exam} mock={lastDone} results={lastResults ?? []} subjects={subjects} />
 
       {series.length >= 2 && (
         <section className="card space-y-2 p-5">
